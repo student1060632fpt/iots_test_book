@@ -1,9 +1,13 @@
 import sys
+import random
+import time
+import serial.tools.list_ports
+
 from Adafruit_IO import MQTTClient
 
 AIO_FEED_ID = "bbc-led"
 AIO_USERNAME = "haveaniceday6174"
-AIO_KEY = "aio_JTYj62T1XnRRKMjLovE1U06S7D8F"
+AIO_KEY = "aio_DQXZ53GLwbImhG7ty3f6qQ4Zllvt"
 
 def connected(client):
     print("Ket noi thanh cong")
@@ -28,4 +32,7 @@ client.connect()
 client.loop_background()
 
 while True :
-    pass
+    value = random.randint(0,100)
+    print("Cap nhat:", value)
+    client.publish("bbc-temp", value)
+    time.sleep(30)
