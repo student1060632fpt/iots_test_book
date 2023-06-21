@@ -1,16 +1,17 @@
 import serial.tools.list_ports
 import random
 import time
-import sys
-from Adafruit_IO import  MQTTClient
+import  sys
+from  Adafruit_IO import  MQTTClient
 
-AIO_FEED_ID = "bbc-led"
+AIO_FEED_IDS = ["bbc-led", "bbc-pump"]
 AIO_USERNAME = "haveaniceday6174"
-AIO_KEY = "aio_DQXZ53GLwbImhG7ty3f6qQ4Zllvt"
+AIO_KEY = "aio_EYLq10mEX5NVnr3jRxnC7qYbTDMX"
 
 def  connected(client):
     print("Ket noi thanh cong...")
-    client.subscribe(AIO_FEED_ID)
+    for feed in AIO_FEED_IDS:
+        client.subscribe(feed)
 
 def  subscribe(client , userdata , mid , granted_qos):
     print("Subcribe thanh cong...")
@@ -21,7 +22,8 @@ def  disconnected(client):
 
 def  message(client , feed_id , payload):
     print("Nhan du lieu: " + payload)
-    ser.write((str(payload) + "#").encode())
+    if isMicrobitConnected:
+        ser.write((str(payload) + "#").encode())
 
 client = MQTTClient(AIO_USERNAME , AIO_KEY)
 client.on_connect = connected
@@ -43,16 +45,24 @@ def getPort():
             commPort = (splitPort[0])
     return commPort
 
-ser = serial.Serial( port=getPort(), baudrate=115200)
+isMicrobitConnected = False
+if getPort() != "None":
+    ser = serial.Serial( port=getPort(), baudrate=115200)
+    isMicrobitConnected = True
 
-mess = ""
+
 def processData(data):
     data = data.replace("!", "")
     data = data.replace("#", "")
     splitData = data.split(":")
     print(splitData)
-    if splitData[1] == "TEMP":
-        client.publish("bbc-temp", splitData[2])
+    try:
+        if splitData[1] == "TEMP":
+            client.publish("bbc-temp", splitData[2])
+        elif splitData[1] == "HUMI":
+            client.publish("bbc-humi", splitData[2])
+    except:
+        pass
 
 mess = ""
 def readSerial():
@@ -70,5 +80,7 @@ def readSerial():
                 mess = mess[end+1:]
 
 while True:
-    readSerial()
+    if isMicrobitConnected:
+        readSerial()
+
     time.sleep(1)
